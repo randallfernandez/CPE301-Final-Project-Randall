@@ -1,37 +1,60 @@
-#include <Arduino.h>
-#include <Servo.h>
-#include <LiquidCrystal_I2C.h>
-#include <dht_nonblocking.h>
-#include <stdlib.h>
+#include "dht.h"
+#include <LiquidCrystal.h>
+#include <Time.h>
+#include <TimeLib.h>
+#include <DS1307RTC.h>
+#include <Wire.h>
 
-#define FAN_ENABLE 6 //pin 12
-#define DIRA 4 //pin 10
-#define DIRB 5 //pin 11
-#define SYSTEM 0 //pin 53
+int waterLevel = 0;                                                 //water level initialization
+int Spin = A0;                                                      //water level sensor pin
 
-volatile unsigned char* my_ADMUX = (unsigned char*) 0x7C;
-volatile unsigned char* my_ADCSRB = (unsigned char*) 0x7B;
-volatile unsigned char* my_ADCSRA = (unsigned char*) 0x7A;
-volatile unsigned int* my_ADC_DATA = (unsigned int *) 0x78;
-volatile unsigned char* ddrB = (unsigned char *) 0x24;
-volatile unsigned char* portB = (unsigned char *) 0x25;
-volatile unsigned char* pinB = (unsigned char*) 0x23;
+LiquidCrystal lcd(8, 9, 10, 11, 12, 13);                            // LCD display
+#define dht_analogPin A1                                            // directing the humidity/temperature sensor to
+dht DHT;                                                            // analog pin A1
 
-int WaterSensorPin = 0;
-int HistoryValue = 0;
-char printBuffer[128];
-int fanAngle = 90;
-bool enable = 0;
-int waterLevel;
-float temperature, humidity;
+int motor = 4;                                                      // enable motor at pwm pin 1
+int motorIN_1 = 3;                                                  // setup direction M1 direction 0/1 of motor at pwm pin 3
+int motorIN_2 = 2;                                                  // setup direction M1 direction 1/0 of motor at pwm pin 2
 
-DHT_nonblocking dht_sensor(2, DHT_TYPE_11);
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+const int buttonPin = 50;                                            //push button pin to be read from digital I/O pin 9
+int buttonState = 0;
 
-Servo servo;
+                                                                    // setting up LED pins through 74HC595 IC
+int latchPin = 6;                                                   // Latch pin (ST_CP) defined at digital I/O pin 6 on Arduino
+int clockPin = 7;                                                   // clock pin (SH_CP) defined at digital I/O pin 7 on Arduino
+int dataPin = 5;                                                    // data pin (DS) defined at digital I/O pin 5 on Arduino
 
-int lastButtonState;    // the previous state of button
-int currentButtonState; // the current state of button
+
+int ledPinYellow;                                         //LED Disabled
+int ledPinGreen;                                          //LED IDLE
+int ledPinRed;                                            //LED Error
+int ledPinBlue;                                           //LED Running
+
+const char *monthName[12] = {                                       // establish time elements for RTC module
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
+
+tmElements_t tm;                                                    // variable used for time
+
+bool getDate(const char *str)                                       // function utilized from DS1307RTC/examples/SetTime/SetTime.ino
+{
+  char Month[12];
+  int Day, Year;
+  uint8_t monthIndex;
+
+  if (sscanf(str, "%s %d %d", Month, &Day, &Year) != 3) return false;
+  for (monthIndex = 0; monthIndex < 12; monthIndex++) {
+    if (strcmp(Month, monthName[monthIndex]) == 0) break;
+  }
+  if (monthIndex >= 12) return false;
+  tm.Day = Day;
+  tm.Month = monthIndex + 1;
+  tm.Year = CalendarYrToTm(Year);
+  return true;
+}
+
+//test
 
 void setup() {
     // setup the UART
