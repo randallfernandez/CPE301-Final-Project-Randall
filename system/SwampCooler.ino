@@ -9,20 +9,20 @@ int waterLevel = 0;                                                 //water leve
 int Spin = A0;                                                      //water level sensor pin
 
 LiquidCrystal lcd(8, 9, 10, 11, 12, 13);                            // LCD display
-#define dht_analogPin A1                                            // directing the humidity/temperature sensor to
+#define dht_analogPin A1                                            // humidity/temperature sensor
 dht DHT;                                                            // analog pin A1
 
 int motor = 4;                                                      // enable motor at pwm pin 1
-int motorIN_1 = 3;                                                  // setup direction M1 direction 0/1 of motor at pwm pin 3
-int motorIN_2 = 2;                                                  // setup direction M1 direction 1/0 of motor at pwm pin 2
+int motorIN_1 = 3;                                                  // setup direction M1 direction pin 3
+int motorIN_2 = 2;                                                  // setup direction M1 direction pin 2
 
 const int buttonPin = 50;                                            //push button pin to be read from digital I/O pin 9
 int buttonState = 0;
 
-                                                                    // setting up LED pins through 74HC595 IC
-int latchPin = 6;                                                   // Latch pin (ST_CP) defined at digital I/O pin 6 on Arduino
-int clockPin = 7;                                                   // clock pin (SH_CP) defined at digital I/O pin 7 on Arduino
-int dataPin = 5;                                                    // data pin (DS) defined at digital I/O pin 5 on Arduino
+                                                                    // setting up LED pins
+int latchPin = 6;                                                   // Latch pin (ST_CP)
+int clockPin = 7;                                                   // clock pin (SH_CP) 
+int dataPin = 5;                                                    // data pin (DS)
 
 
 int ledPinYellow;                                         //LED Disabled
@@ -30,14 +30,14 @@ int ledPinGreen;                                          //LED IDLE
 int ledPinRed;                                            //LED Error
 int ledPinBlue;                                           //LED Running
 
-const char *monthName[12] = {                                       // establish time elements for RTC module
+const char *monthName[12] = {                                       
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-tmElements_t tm;                                                    // variable used for time
+tmElements_t tm;                                                    //time
 
-bool getDate(const char *str)                                       // function utilized from DS1307RTC/examples/SetTime/SetTime.ino
+bool getDate(const char *str)                                    
 {
   char Month[12];
   int Day, Year;
@@ -51,6 +51,17 @@ bool getDate(const char *str)                                       // function 
   tm.Day = Day;
   tm.Month = monthIndex + 1;
   tm.Year = CalendarYrToTm(Year);
+  return true;
+}
+
+bool getTime(const char *str)                            
+{
+  int Hour, Min, Sec;
+
+  if (sscanf(str, "%d:%d:%d", &Hour, &Min, &Sec) != 3) return false;
+  tm.Hour = Hour;
+  tm.Minute = Min;
+  tm.Second = Sec;
   return true;
 }
 
