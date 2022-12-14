@@ -65,6 +65,20 @@ bool getTime(const char *str)
   return true;
 }
 
+boolean shiftRegister[8];
+void writeReg()
+{
+  digitalWrite(clockPin, LOW);
+  
+  for (int i = 0; i<4; i++)
+  {
+    digitalWrite(latchPin, LOW);
+    digitalWrite(dataPin, shiftRegister[i]);
+    digitalWrite(latchPin, HIGH);
+  }
+  digitalWrite(clockPin, HIGH);
+}
+
 //test
 
 void setup() {
